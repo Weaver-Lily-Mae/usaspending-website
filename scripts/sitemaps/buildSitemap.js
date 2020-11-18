@@ -70,6 +70,7 @@ const createRobots = () => {
         (e) => {
             if (e) {
                 console.log(' Error : ', e);
+                // stop jenkins job if there is an error
                 throw e.message;
             }
             console.log("robots.txt successfully created!");
