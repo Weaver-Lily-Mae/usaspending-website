@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
 import PropTypes from 'prop-types';
-import { Table } from 'data-transparency-ui';
-import { throttle } from 'lodash';
+import { Table } from "data-transparency-ui";
+import { throttle } from "lodash";
 
 import DrilldownCell from 'components/aboutTheData/DrilldownCell';
 import CellWithModal from 'components/aboutTheData/CellWithModal';
@@ -19,18 +19,19 @@ const dateRows = mockAPI.dates.results
         (<div className="generic-cell-content">{total}</div>),
         ...periods.map(({ date }) => (<div className="generic-cell-content">{date}</div>))
     ]));
-
 const propTypes = {
     openModal: PropTypes.func.isRequired,
     activeTab: PropTypes.oneOf(['dates', 'details'])
 };
-
-const AgenciesContainer = ({ activeTab, openModal }) => {
-    const [sortStatus, updateSort] = useState({ field: '', direction: 'asc' });
-    const [{ vertical: isVertialSticky, horizontal: isHorizontalSticky }, setIsSticky] = useState({ vertical: false, horizontal: false });
+const AgenciesContainer = ({ activeTab, openModal, urlFy }) => {
     const [loading] = useState(false);
     const [error] = useState(false);
+    const [sortStatus, updateSort] = useState({ field: "", direction: "asc" });
+    const [{ vertical: isVerticalSticky, horizontal: isHorizontalSticky }, setIsSticky] = useState({ vertical: false, horizontal: false });
     const tableRef = useRef(null);
+    const verticalStickyClass = isVerticalSticky ? 'sticky-y-table' : '';
+    const horizontalStickyClass = isHorizontalSticky ? 'sticky-x-table' : '';
+
     const handleScroll = throttle(() => {
         const { scrollLeft: horizontal, scrollTop: vertical } = tableRef.current;
         setIsSticky({ vertical, horizontal });
@@ -39,9 +40,6 @@ const AgenciesContainer = ({ activeTab, openModal }) => {
     const handleUpdateSort = (field, direction) => {
         updateSort({ field, direction });
     };
-
-    const verticalStickyClass = isVertialSticky ? 'sticky-y-table' : '';
-    const horizontalStickyClass = isHorizontalSticky ? 'sticky-x-table' : '';
 
     // TODO - create a data model for agency row
     const rows = mockAPI.details.results.map(
@@ -91,4 +89,5 @@ const AgenciesContainer = ({ activeTab, openModal }) => {
 };
 
 AgenciesContainer.propTypes = propTypes;
+
 export default AgenciesContainer;

@@ -3,17 +3,22 @@
  * Created by Lizzie Salita 11/25/20
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import PropTypes from 'prop-types';
-import { TooltipComponent, TooltipWrapper, Tabs } from "data-transparency-ui";
+import { TooltipComponent, TooltipWrapper, Tabs, Picker } from "data-transparency-ui";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import Header from "containers/shared/HeaderContainer";
 import Footer from "containers/Footer";
+import WithLatestFy from "containers/account/WithLatestFy";
 import StickyHeader from "components/sharedComponents/stickyHeader/StickyHeader";
 import Note from "components/sharedComponents/Note";
 import AboutTheDataModal from "components/aboutTheData/AboutTheDataModal";
 import AgenciesContainer from 'containers/aboutTheData/AgenciesContainer';
 import { modalTitles, modalClassNames } from 'dataMapping/aboutTheData/modals';
+
+import { allFiscalYears } from "helpers/fiscalYearHelper";
 
 require("pages/aboutTheData/agenciesPage.scss");
 
@@ -36,12 +41,24 @@ const TableTabLabel = ({ label, tooltipComponent = <Tooltip title={label} /> }) 
 
 TableTabLabel.propTypes = {
     label: PropTypes.string.isRequired,
-    tooltipComponent: PropTypes.element
+    tooltipComponent: PropTypes.element,
+    dataAsOf: PropTypes.object.isRequired // moment object
 };
 
 const message = "All numeric figures in this table are calculated based on the set of TAS owned by each agency, as opposed to the set of TAS that the agency directly reported to USAspending.gov. In the vast majority of cases, these are exactly the same (upwards of 95% of TAS—with these TAS representing over 99% of spending—are submitted and owned by the same agency). This display decision is consistent with our practice throughout the website of grouping TAS by the owning agency rather than the reporting agency. While reporting agencies are not identified in this table, they are available in the Custom Account Download in the reporting_agency_name field.";
 
-const AboutTheDataPage = () => {
+const propTypes = {
+    dataAsOf: PropTypes.object, // moment obj
+    history: PropTypes.func
+};
+
+const AboutTheDataPage = ({
+    dataAsOf,
+    history
+}) => {
+    const { fy: urlFy } = useParams();
+    const latestFy = dataAsOf ? dataAsOf.format('YYYY') : null;
+    const [selectedFy, setSelectedFy] = useState(latestFy);
     const [activeTab, setActiveTab] = useState('details'); // details or dates
     const [showModal, setShowModal] = useState('');
     const [modalAgency, setModalAgency] = useState('');
@@ -56,6 +73,30 @@ const AboutTheDataPage = () => {
     const handleSwitchTab = (tab) => {
         setActiveTab(tab);
     };
+
+    const handleFyChange = (fy) => {
+        history.push(`${fy}`);
+        setSelectedFy(fy);
+    };
+
+
+    useEffect(() => {
+        if (dataAsOf) {
+            setSelectedFy(dataAsOf.year());
+        }
+    }, [dataAsOf]);
+
+    useEffect(() => {
+        if (dataAsOf) {
+            if (allFiscalYears(2017, dataAsOf.year()).includes(parseInt(urlFy, 10))) {
+                setSelectedFy(urlFy);
+            }
+            else {
+                setSelectedFy(`${dataAsOf.year()}`);
+                history.push('latest');
+            }
+        }
+    }, [dataAsOf]);
 
     return (
         <div className="usa-da__about-the-data__agencies-page">
@@ -79,7 +120,21 @@ const AboutTheDataPage = () => {
                             { internal: 'dates', label: <TableTabLabel label="Updates by  Fiscal Year" /> }
                         ]} />
                     <div className="table-controls__time-and-search">
-                        <p>Place holder for Search components etc...</p>
+                        <span className="fy-picker-title">FISCAL YEAR</span>
+                        <Picker
+                            icon=""
+                            isFixedWidth
+                            selectedOption={selectedFy
+                                ? `FY ${selectedFy}`
+                                : (
+                                    <div className="fy-loading">
+                                        FY <FontAwesomeIcon icon="spinner" size="sm" alt="Toggle menu" spin />
+                                    </div>
+                                )}
+                            options={dataAsOf
+                                ? allFiscalYears(2017, dataAsOf.year()).map((year) => ({ name: `${year}`, value: `${year}`, onClick: handleFyChange }))
+                                : [{ name: 'Loading...', value: null, onClick: () => {} }]
+                            } />
                     </div>
                 </div>
                 <AgenciesContainer openModal={modalClick} activeTab={activeTab} />
@@ -100,4 +155,10 @@ const AboutTheDataPage = () => {
     );
 };
 
-export default AboutTheDataPage;
+AboutTheDataPage.propTypes = propTypes;
+
+export default () => (
+    <WithLatestFy propName="dataAsOf">
+        <AboutTheDataPage />
+    </WithLatestFy>
+);

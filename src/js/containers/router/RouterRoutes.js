@@ -169,8 +169,8 @@ export const routes = [
         exact: true
     },
     {
-        path: '/about-the-data/agencies',
-        component: AboutTheDataPage,
+        path: '/about-the-data/agencies/:fy',
+        component: AgenciesContainer,
         exact: true,
         hide: !kGlobalConstants.DEV && !kGlobalConstants.QAT // Not DEV and not QAT === Production, so we hide
     },
