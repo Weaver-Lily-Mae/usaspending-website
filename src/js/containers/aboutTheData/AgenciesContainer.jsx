@@ -1,8 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from 'prop-types';
-import { Table, TooltipComponent, TooltipWrapper, Tabs } from "data-transparency-ui";
-import { throttle } from 'lodash';
+import { Table, TooltipComponent, TooltipWrapper, Tabs, Picker } from "data-transparency-ui";
+import { throttle } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+import { allFiscalYears } from "helpers/fiscalYearHelper";
+import WithLatestFy from "containers/account/WithLatestFy";
 import Header from "containers/shared/HeaderContainer";
 import Footer from "containers/Footer";
 import StickyHeader from "components/sharedComponents/stickyHeader/StickyHeader";
@@ -281,10 +284,14 @@ const dateRows = mockDatesApiResponse.results
 
 const message = "All numeric figures in this table are calculated based on the set of TAS owned by each agency, as opposed to the set of TAS that the agency directly reported to USAspending.gov. In the vast majority of cases, these are exactly the same (upwards of 95% of TAS—with these TAS representing over 99% of spending—are submitted and owned by the same agency). This display decision is consistent with our practice throughout the website of grouping TAS by the owning agency rather than the reporting agency. While reporting agencies are not identified in this table, they are available in the Custom Account Download in the reporting_agency_name field.";
 
-const AgenciesContainer = () => {
+const AgenciesContainer = ({
+    dataAsOf
+}) => {
+    const latestFy = dataAsOf ? dataAsOf.format('YYYY') : null;
     const [sortStatus, updateSort] = useState({ field: "", direction: "asc" });
+    const [selectedFy, setSelectedFy] = useState(latestFy);
     const [activeTab, setActiveTab] = useState('details'); // details or dates
-    const [{ vertical: isVertialSticky, horizontal: isHorizontalSticky }, setIsSticky] = useState({ vertical: false, horizontal: false });
+    const [{ vertical: isVerticalSticky, horizontal: isHorizontalSticky }, setIsSticky] = useState({ vertical: false, horizontal: false });
     const [showModal, setShowModal] = useState('');
     const [modalAgency, setModalAgency] = useState('');
     const tableRef = useRef(null);
@@ -297,7 +304,7 @@ const AgenciesContainer = () => {
         updateSort({ field, direction });
     };
 
-    const verticalStickyClass = isVertialSticky ? 'sticky-y-table' : '';
+    const verticalStickyClass = isVerticalSticky ? 'sticky-y-table' : '';
     const horizontalStickyClass = isHorizontalSticky ? 'sticky-x-table' : '';
     // Modal Logic
     const modalClick = (modalType, agencyName) => {
@@ -330,6 +337,15 @@ const AgenciesContainer = () => {
             (<div className="generic-cell-content">{differenceInFileAAndB}</div>)
         ]
     );
+    const handleFyChange = (fy) => {
+        setSelectedFy(fy);
+    };
+
+    useEffect(() => {
+        if (dataAsOf) {
+            setSelectedFy(dataAsOf.year());
+        }
+    }, [dataAsOf]);
 
     return (
         <div className="usa-da__about-the-data__agencies-page">
@@ -353,7 +369,19 @@ const AgenciesContainer = () => {
                             { internal: 'dates', label: <TableTabLabel label="Updates by  Fiscal Year" /> }
                         ]} />
                     <div className="table-controls__time-and-search">
-                        <p>Place holder for Search components etc...</p>
+                        <Picker
+                            icon=""
+                            selectedOption={selectedFy
+                                ? `FY ${selectedFy}`
+                                : (
+                                    <div className="fy-loading">
+                                        FY <FontAwesomeIcon icon="spinner" size="sm" alt="Toggle menu" spin />
+                                    </div>
+                                )}
+                            options={latestFy
+                                ? allFiscalYears(2017, latestFy).map((year) => ({ name: `${year}`, value: `${year}`, onClick: handleFyChange }))
+                                : [{ name: 'Loading...', value: null, onClick: () => {} }]
+                            } />
                     </div>
                 </div>
                 <div className="table-container" ref={tableRef} onScroll={handleScroll}>
@@ -433,4 +461,12 @@ const AgenciesContainer = () => {
     );
 };
 
-export default AgenciesContainer;
+AgenciesContainer.propTypes = {
+    dataAsOf: PropTypes.object
+};
+
+export default () => (
+    <WithLatestFy propName="dataAsOf">
+        <AgenciesContainer />
+    </WithLatestFy>
+);
