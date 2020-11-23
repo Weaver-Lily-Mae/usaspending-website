@@ -43,6 +43,9 @@
       .table-controls__time-and-search {
         padding-left: rem(25);
         margin-top: rem(25);
+        @include display(flex);
+        @include justify-content(flex-start);
+        @include align-items(flex-start);
         .usa-dt-picker__button-icon svg {
           color:  #0074BE;
         }
@@ -52,7 +55,7 @@
           }
         }
         .usa-dt-picker__list {
-          z-index: 1;
+          z-index: 11;
         }
         .usa-dt-picker__button {
           border-bottom: rem(2) solid #0074BE;
@@ -65,10 +68,16 @@
             color: $color-base;
           }
         }
-        .fy-picker-title {
-          font-size: rem(14);
-          margin-left: rem(15);
-          color: #8C8C8C;
+        .picker-container {
+          @include display(flex);
+          @include flex-direction(column);
+          .fy-picker__title,
+          .period-picker__title {
+            font-size: rem(14);
+            margin-left: rem(15);
+            color: #8C8C8C;
+          }
+
         }
       }
       .table-type-toggle:focus {
