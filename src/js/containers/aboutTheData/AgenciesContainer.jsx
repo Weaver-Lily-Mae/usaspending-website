@@ -19,11 +19,12 @@ const dateRows = mockAPI.dates.results
         (<div className="generic-cell-content">{total}</div>),
         ...periods.map(({ date }) => (<div className="generic-cell-content">{date}</div>))
     ]));
+
 const propTypes = {
     openModal: PropTypes.func.isRequired,
     activeTab: PropTypes.oneOf(['dates', 'details'])
 };
-const AgenciesContainer = ({ activeTab, openModal, urlFy }) => {
+const AgenciesContainer = ({ activeTab, openModal }) => {
     const [loading] = useState(false);
     const [error] = useState(false);
     const [sortStatus, updateSort] = useState({ field: "", direction: "asc" });
